@@ -8,6 +8,7 @@
 #include <net/if.h>
 #include <unistd.h>
 #include <netlink/attr.h>
+#include <time.h>
 
 static int bss_handler(struct nl_msg* msg, void* arg) {
     struct nlattr* attrs[NL80211_ATTR_MAX + 1];
@@ -97,8 +98,9 @@ void trigger_scan(struct nl_sock* sock, int nl80211_id, int ifindex) {
 
     nlmsg_free(msg);
 
-    printf("Scanning... (sleep 5s)\n");
-    sleep(5);
+    // int time_wait = 8;
+    // printf("Scanning... (sleep %ds)\n", time_wait);
+    // sleep(time_wait);
 }
 
 void get_scan_results(struct nl_sock* sock, int nl80211_id, int ifindex) {
@@ -123,3 +125,41 @@ void get_scan_results(struct nl_sock* sock, int nl80211_id, int ifindex) {
     nl_recvmsgs_default(sock);
     nlmsg_free(msg);
 }
+
+static int scan_event_handler(struct nl_msg* msg, void* arg) {
+    struct genlmsghdr* gnlh = nlmsg_data(nlmsg_hdr(msg));
+
+    if (gnlh->cmd == NL80211_CMD_NEW_SCAN_RESULTS) {
+        printf("Scan finished\n");
+        int* done = arg;
+        *done = 1;
+    }
+
+    if (gnlh->cmd == NL80211_CMD_SCAN_ABORTED) {
+        printf("Scan aborted\n");
+        int* done = arg;
+        *done = -1;
+    }
+
+    return NL_OK;
+}
+
+
+void wait_for_scan(struct nl_sock* sock) {
+    int done = 0;
+    nl_socket_modify_cb(sock, NL_CB_VALID, NL_CB_CUSTOM, scan_event_handler, &done);
+
+    time_t start = time(NULL);
+    while (done == 0) {
+        nl_recvmsgs_default(sock);
+
+        // таймаут 10 секунд
+        if (time(NULL) - start > 10) {
+            fprintf(stderr, "Timeout waiting for scan event\n");
+            break;
+        }
+    }
+
+    if (done < 0) exit(EXIT_FAILURE);
+}
+
