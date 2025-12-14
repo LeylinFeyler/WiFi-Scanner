@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.10)
 project(WifiScanner C)
 
 set(CMAKE_C_STANDARD 11)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)   # <-- критично важливо
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBNL REQUIRED libnl-3.0 libnl-genl-3.0)
