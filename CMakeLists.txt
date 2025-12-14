@@ -2,12 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(WifiScanner C)
 
 set(CMAKE_C_STANDARD 11)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)   # <-- критично важливо
 
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(LIBNL REQUIRED libnl-3.0 libnl-genl-3.0)
-
-include_directories(${LIBNL_INCLUDE_DIRS})
-link_directories(${LIBNL_LIBRARY_DIRS})
 
 add_executable(wifi_scanner
     src/main.c
@@ -15,4 +13,10 @@ add_executable(wifi_scanner
     src/scan.c
 )
 
-target_link_libraries(wifi_scanner ${LIBNL_LIBRARIES})
+target_include_directories(wifi_scanner PRIVATE
+    ${LIBNL_INCLUDE_DIRS}
+)
+
+target_link_libraries(wifi_scanner
+    ${LIBNL_LIBRARIES}
+)

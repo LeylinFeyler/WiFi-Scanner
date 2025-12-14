@@ -4,7 +4,10 @@
 #include <netlink/netlink.h>
 #include <netlink/genl/genl.h>
 
+// створює та підключає generic netlink socket
 struct nl_sock* init_nl_socket();
+
+// отримує id сімейства nl80211
 int get_nl80211_id(struct nl_sock* sock);
 
 #endif
